@@ -25,6 +25,17 @@ def conectar_redis():
             print(f"[{WORKER_ID}] Redis no disponible, reintentando en 2s...")
             time.sleep(2)
 
+def generar_resumen(oraciones, palabras_clave, max_oraciones=3):
+    if not oraciones:
+        return ""
+    puntuadas = []
+    for o in oraciones:
+        score = sum(1 for p in palabras_clave if p in o.lower())
+        puntuadas.append((score, o))
+    puntuadas.sort(key=lambda x: x[0], reverse=True)
+    seleccionadas = [o for _, o in puntuadas[:max_oraciones]]
+    return " ".join(seleccionadas)
+
 def analizar_texto(texto: str) -> dict:
     texto_limpio = texto.strip()
     palabras_raw = texto_limpio.split()
@@ -34,7 +45,7 @@ def analizar_texto(texto: str) -> dict:
     total_oraciones = texto_limpio.count('.') + texto_limpio.count('!') + texto_limpio.count('?')
 
     PALABRAS_VACIAS = {
-        "el","la","los","las","un","una","unos","unas","de","del","en","con",
+        "el","su","sus","como","la","los","las","un","una","unos","unas","de","del","en","con","fue",
         "por","para","que","se","y","o","a","es","son","the","an","is","are",
         "and","or","of","to","in","it","this"
     }
@@ -46,7 +57,7 @@ def analizar_texto(texto: str) -> dict:
     palabras_clave = [palabra for palabra, freq in contador.items() if freq >= 2]
 
     oraciones = [s.strip() for s in texto_limpio.replace('!','.').replace('?','.').split('.') if s.strip()]
-    resumen = oraciones[0] if oraciones else texto_limpio[:100]
+    resumen = generar_resumen(oraciones, palabras_clave)
 
     palabras_es = {"el","la","de","en","que","es","son","con","del"}
     palabras_en = {"the","is","are","and","or","of","to","in","it"}
@@ -61,7 +72,7 @@ def analizar_texto(texto: str) -> dict:
         "total_oraciones": max(total_oraciones, 1),
         "top_palabras": [{"palabra": p, "frecuencia": f} for p, f in top_palabras],
         "palabras_clave": palabras_clave[:10],
-        "resumen": resumen[:200],
+        "resumen": resumen[:600], 
         "idioma_detectado": idioma,
     }
 
