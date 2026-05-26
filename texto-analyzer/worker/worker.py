@@ -3,6 +3,8 @@ import os
 import socket
 import time
 from collections import Counter
+import sys
+sys.stdout.reconfigure(line_buffering=True)
 
 import redis
 
@@ -81,7 +83,7 @@ def main():
             tarea["status"] = "en_proceso"
             tarea["worker"] = WORKER_ID
             r.set(f"tarea:{tarea_id}", json.dumps(tarea))
-            time.sleep(1.5)
+            time.sleep(10.5)
 
             try:
                 resultado_analisis = analizar_texto(tarea["texto"])
